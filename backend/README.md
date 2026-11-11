@@ -16,10 +16,12 @@ All endpoints are under `/api/v1`. There is no password reset or general user-ma
 ## Requirements and database safety
 
 - Java 17 or newer (`java -version`).
-- MySQL with the existing `campuscare` database and four tables.
+- MySQL with a `campuscare` database. Local/default-profile use requires the four mapped tables to exist; the production profile can create them on a fresh database through Flyway.
 - Windows PowerShell. Maven is downloaded automatically by the included Maven Wrapper.
 
-The application uses `spring.jpa.hibernate.ddl-auto=validate`. Hibernate checks that entity mappings match the existing tables; it does not create, update, or delete tables. Category seeding only inserts a category if its name is missing; existing categories are not removed or overwritten.
+The application uses `spring.jpa.hibernate.ddl-auto=validate`. Hibernate checks that entity mappings match the database; it does not create, update, or delete tables. Category seeding only inserts a category if its name is missing; existing categories are not removed or overwritten.
+
+For production, activate the `prod` Spring profile. Flyway applies the versioned MySQL migration to an empty database. A non-empty database without Flyway history is baselined at version 1, so the initial migration is skipped; Hibernate then validates the existing schema. Inspect and back up existing data/schema before the first production-profile startup. Do not use the baseline behavior with an unreviewed partial schema.
 
 ## Configure and run (Windows PowerShell)
 
@@ -30,6 +32,8 @@ $env:DB_URL = "jdbc:mysql://localhost:3306/campuscare?useSSL=false&allowPublicKe
 $env:DB_USERNAME = "campuscare_app"
 $env:DB_PASSWORD = "your-mysql-password"
 ```
+
+`DB_USERNAME` and `DB_PASSWORD` are required. The server listens on Railway's `PORT` when present; locally it defaults to `8080` (or `SERVER_PORT`).
 
 To create the first admin user when its email does not already exist, optionally set these before startup. The password must have at least 12 characters. It is stored as a BCrypt hash. The application will not promote an existing student account.
 
@@ -45,7 +49,37 @@ Run the API:
 .\mvnw.cmd spring-boot:run
 ```
 
-The API listens on `http://localhost:8080`. If schema validation fails, stop and compare the existing MySQL columns with the entity mappings; do not change `ddl-auto` to `create`, `create-drop`, or `update` to work around it.
+The API listens on `http://localhost:8080` locally. If schema validation fails, stop and compare the existing MySQL columns with the entity mappings; do not change `ddl-auto` to `create`, `create-drop`, or `update` to work around it.
+
+## Railway production configuration
+
+Set these variables on the Railway backend service. Railway supplies `PORT` automatically:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:mysql://<railway-mysql-host>:<railway-mysql-port>/<railway-database>?serverTimezone=UTC
+DB_USERNAME=<railway-mysql-username>
+DB_PASSWORD=<railway-mysql-password>
+CORS_ALLOWED_ORIGIN=https://<your-vercel-production-domain>
+```
+
+Use Railway's actual MySQL service connection values and keep credentials in Railway's variable manager. `CORS_ALLOWED_ORIGIN` must be the exact frontend origin (scheme and host, no trailing slash/path); credentialed CORS does not allow wildcard origins.
+
+The `prod` profile enables Flyway, sets the session and CSRF cookies to `Secure; SameSite=None`, and requires the configured allowed origin. The local profile remains unchanged. Railway's `PORT` takes precedence over the local port fallback.
+
+Optional administrator bootstrap variables:
+
+```text
+BOOTSTRAP_ADMIN_EMAIL=<new-admin-email>
+BOOTSTRAP_ADMIN_NAME=<admin-display-name>
+BOOTSTRAP_ADMIN_PASSWORD=<unique-password-of-at-least-12-characters>
+```
+
+Bootstrap creates an admin only when the email is unused; it does not promote an existing student. Remove the bootstrap password from the deployment environment after provisioning if it is no longer needed.
+
+For Vercel, set `VITE_API_BASE_URL` to `https://<your-railway-backend-domain>/api/v1` in the frontend project's build environment. The frontend client already supports an absolute API base URL; do not put backend database/admin secrets in Vercel.
+
+Separate Vercel and Railway default domains are cross-site. `SameSite=None; Secure` is necessary for session cookies, but browser third-party-cookie restrictions may still interfere. If needed, use custom domains under the same registrable domain or a same-origin proxy.
 
 ## Run the integrated frontend
 
