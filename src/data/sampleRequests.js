@@ -1,0 +1,81 @@
+const daysAgo = (days, hour = 10) => {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  date.setHours(hour, 20, 0, 0)
+  return date.toISOString()
+}
+
+export const sampleRequests = [
+  {
+    id: 'CC-1048',
+    title: 'Projector not working',
+    category: 'Electrical',
+    location: 'Classroom Block A · Room 204',
+    description: 'The projector turns on but no image is displayed during lectures.',
+    priority: 'High',
+    status: 'In Progress',
+    submittedAt: daysAgo(0, 9),
+    submittedBy: 'Alex Morgan',
+    studentId: 'student',
+  },
+  {
+    id: 'CC-1047',
+    title: 'Water leakage in washroom',
+    category: 'Plumbing',
+    location: 'Boys Hostel · Floor 2',
+    description: 'Water is leaking continuously from the sink pipe.',
+    priority: 'High',
+    status: 'Pending',
+    submittedAt: daysAgo(1, 15),
+    submittedBy: 'Alex Morgan',
+    studentId: 'student',
+  },
+  {
+    id: 'CC-1046',
+    title: 'Broken lights in lab',
+    category: 'Electrical',
+    location: 'Science Block · Lab 204',
+    description: 'Two ceiling lights are flickering and one has stopped working.',
+    priority: 'Medium',
+    status: 'Resolved',
+    submittedAt: daysAgo(2, 11),
+    submittedBy: 'Alex Morgan',
+    studentId: 'student',
+  },
+  {
+    id: 'CC-1045',
+    title: 'Damaged classroom chair',
+    category: 'Furniture',
+    location: 'Block B · Room 108',
+    description: 'The backrest of a chair is loose and unsafe to use.',
+    priority: 'Low',
+    status: 'Pending',
+    submittedAt: daysAgo(3, 13),
+    submittedBy: 'Jamie Lee',
+    studentId: 'other-student',
+  },
+  {
+    id: 'CC-1044',
+    title: 'Washroom maintenance',
+    category: 'Cleanliness',
+    location: 'Academic Block · Ground Floor',
+    description: 'The washroom needs attention and the soap dispenser is empty.',
+    priority: 'Medium',
+    status: 'In Progress',
+    submittedAt: daysAgo(4, 9),
+    submittedBy: 'Alex Morgan',
+    studentId: 'student',
+  },
+  {
+    id: 'CC-1043',
+    title: 'Leaking water cooler',
+    category: 'Plumbing',
+    location: 'Library · First Floor',
+    description: 'The water cooler is leaking onto the floor beside the outlet.',
+    priority: 'Low',
+    status: 'Resolved',
+    submittedAt: daysAgo(6, 12),
+    submittedBy: 'Taylor Kim',
+    studentId: 'another-student',
+  },
+]
